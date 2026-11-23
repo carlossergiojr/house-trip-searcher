@@ -5,6 +5,14 @@ from radar import config
 from radar.comum.texto import normalizar
 
 
+ROTULO_CONDOMINIO = r"cond(?:om[ií]nio)?"
+ROTULO_IPTU = r"iptu"
+
+
+def reais(valor: int) -> str:
+    return f"R$ {valor:,}".replace(",", ".")
+
+
 @dataclass
 class Imovel:
     site: str
@@ -12,28 +20,52 @@ class Imovel:
     url: str
     tipo: str
     bairro: str  # nome como em config.BAIRROS
-    preco: int | None
+    preco: int | None  # aluguel
     quartos: int | None = None
     area: int | None = None
     foto: str | None = None
+    banheiros: int | None = None
+    vagas: int | None = None
+    condominio: int | None = None  # 0 = isento, None = não informado
+    iptu: int | None = None
+    endereco: str | None = None
 
     @property
     def chave(self) -> str:
         return f"{self.site}:{self.id}"
 
+    @property
+    def total(self) -> int | None:
+        """Aluguel + condomínio + IPTU (o que não foi informado conta como 0)."""
+        if self.preco is None:
+            return None
+        return self.preco + (self.condominio or 0) + (self.iptu or 0)
+
     def legenda(self) -> str:
         detalhes = [self.tipo.capitalize()]
-        if self.quartos:
-            detalhes.append(f"{self.quartos} quarto{'s' if self.quartos > 1 else ''}")
+        for valor, nome in [(self.quartos, "quarto"), (self.banheiros, "banheiro"),
+                            (self.vagas, "vaga")]:
+            if valor:
+                detalhes.append(f"{valor} {nome}{'s' if valor > 1 else ''}")
         if self.area:
             detalhes.append(f"{self.area} m²")
-        preco = f"R$ {self.preco:,}".replace(",", ".") if self.preco else "preço não informado"
-        return (
-            f"🏠 <b>Novo imóvel — {escape(self.bairro)}</b>\n"
-            f"{escape(' · '.join(detalhes))}\n"
-            f"💰 {preco}/mês\n"
-            f"🔗 <a href=\"{escape(self.url)}\">ver no {escape(self.site)}</a>"
-        )
+        linhas = [f"🏠 <b>Novo imóvel — {escape(self.bairro)}</b>",
+                  escape(" · ".join(detalhes))]
+        if self.endereco:
+            linhas.append(f"📍 {escape(self.endereco)}")
+        if self.preco:
+            linhas.append(f"💰 {reais(self.preco)}/mês")
+            taxas = [f"{nome} {'isento' if v == 0 else reais(v) if v else 'não informado'}"
+                     for nome, v in [("Cond.", self.condominio), ("IPTU", self.iptu)]]
+            linhas.append(f"     {' · '.join(taxas)}")
+            if self.total != self.preco:
+                linhas.append(f"🧾 Total ≈ <b>{reais(self.total)}</b>/mês")
+            if self.total > config.ALUGUEL_MAXIMO:
+                linhas.append(f"⚠️ Acima do teto de {reais(config.ALUGUEL_MAXIMO)}")
+        else:
+            linhas.append("💰 preço não informado")
+        linhas.append(f"🔗 <a href=\"{escape(self.url)}\">ver no {escape(self.site)}</a>")
+        return "\n".join(linhas)
 
 
 # Palavras que, antes do nome, indicam outro bairro ("Parque Brasília" não é o Brasília).
@@ -62,5 +94,5 @@ def eh_residencial(tipo: str) -> bool:
 def interessa(imovel: Imovel) -> bool:
     return (
         eh_residencial(imovel.tipo)
-        and (imovel.preco is None or imovel.preco <= config.ALUGUEL_MAXIMO)
+        and (imovel.preco is None or imovel.preco <= config.ALUGUEL_BUSCA)
     )

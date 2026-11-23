@@ -8,7 +8,8 @@ imóveis para alugar em Feira de Santana. A parte de viagens entra depois.
 Configurado em [`src/radar/config.py`](src/radar/config.py):
 
 - **Bairros:** Brasília, Santa Mônica, Lagoa Salgada, Conjunto Luiz Eduardo, Jomafa
-- **Aluguel máximo:** R$ 2.500
+- **Teto:** R$ 2.500 somando aluguel, condomínio e IPTU. A busca vai até R$ 2.800 de aluguel para sondar. O que passa do teto chega marcado com ⚠️.
+- **Mensagem:** foto, tipo, quartos, banheiros, vagas, área, rua (no VivaReal), aluguel, condomínio, IPTU e total.
 - **Tipos:** só residenciais (casa, apartamento, casa de condomínio...). Pontos, salas e galpões são descartados.
 - **Sites:**
   - **OLX:** categorias casas e apartamentos da cidade, filtradas por bairro.

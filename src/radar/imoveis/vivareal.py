@@ -13,8 +13,8 @@ import time
 
 from radar import config
 from radar.comum.navegador import ERROS_DE_PAGINA, abrir, navegador
-from radar.comum.texto import extrair_preco
-from radar.imoveis.modelo import Imovel, bairro_alvo
+from radar.comum.texto import extrair_preco, taxa
+from radar.imoveis.modelo import ROTULO_CONDOMINIO, ROTULO_IPTU, Imovel, bairro_alvo
 
 URL = "https://www.vivareal.com.br/aluguel/bahia/feira-de-santana/bairros/{slug}/?precoMaximo={teto}"
 
@@ -51,7 +51,16 @@ def parse_card(site: str, card: dict) -> Imovel | None:
     m_quartos = re.search(r"-(\d+)-quartos?-", slug)
     m_area = re.search(r"-(\d+)m2-", slug)
     m_rs = re.search(r"-RS(\d+)-", slug)
-    preco = extrair_preco(card.get("txt", "")) or (int(m_rs.group(1)) if m_rs else None)
+    txt = card.get("txt", "")
+    preco = extrair_preco(txt) or (int(m_rs.group(1)) if m_rs else None)
+
+    def quantidade(nome: str) -> int | None:
+        m = re.search(rf"Quantidade de {nome}[^\n]*\n+(\d+)", txt)
+        return int(m.group(1)) if m else None
+
+    # A rua vem logo depois de "Bairro, Feira de Santana".
+    m_rua = re.search(r", Feira de Santana\s*\n+([^\n]+)", txt)
+    rua = m_rua.group(1).strip() if m_rua and m_rua.group(1).strip() != "Contatar" else None
     return Imovel(
         site=site,
         id=m_id.group(1),
@@ -59,9 +68,14 @@ def parse_card(site: str, card: dict) -> Imovel | None:
         tipo=m_tipo.group(1).replace("-", " ") if m_tipo else "imóvel",
         bairro=bairro,
         preco=preco,
-        quartos=int(m_quartos.group(1)) if m_quartos else None,
+        quartos=int(m_quartos.group(1)) if m_quartos else quantidade("quartos"),
         area=int(m_area.group(1)) if m_area else None,
         foto=card.get("img"),
+        banheiros=quantidade("banheiros"),
+        vagas=quantidade("vagas"),
+        condominio=taxa(txt, ROTULO_CONDOMINIO),
+        iptu=taxa(txt, ROTULO_IPTU),
+        endereco=rua,
     )
 
 
@@ -73,7 +87,7 @@ def buscar() -> list[Imovel]:
             time.sleep(random.uniform(20, 40))
         try:
             with navegador() as page:
-                abrir(page, URL.format(slug=slug, teto=config.ALUGUEL_MAXIMO))
+                abrir(page, URL.format(slug=slug, teto=config.ALUGUEL_BUSCA))
                 cards = page.evaluate(JS_CARDS)
         except ERROS_DE_PAGINA as erro:
             print(f"[vivareal/{slug}] {erro}")

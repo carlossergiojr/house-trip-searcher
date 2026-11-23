@@ -8,7 +8,9 @@ DADOS = RAIZ / "dados"
 # --- Imóveis -----------------------------------------------------------------
 
 CIDADE = "Feira de Santana"
-ALUGUEL_MAXIMO = 2500
+ALUGUEL_MAXIMO = 2500  # teto desejado (aluguel + condomínio + IPTU)
+# Busca um pouco acima do teto para sondar; esses anúncios chegam marcados.
+ALUGUEL_BUSCA = 2800
 
 # Nome exibido -> variações aceitas (comparadas sem acento e em minúsculas).
 BAIRROS = {

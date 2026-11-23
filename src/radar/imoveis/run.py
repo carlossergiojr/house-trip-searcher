@@ -78,7 +78,7 @@ def _rodar(bot: Telegram, memoria: Memoria, simular: bool, sites: list[str], tod
             por_bairro[i.bairro] = por_bairro.get(i.bairro, 0) + 1
         linhas = "\n".join(f"• {b}: {n}" for b, n in sorted(por_bairro.items()))
         _avisar(bot, f"🏠 Radar de imóveis ligado ({', '.join(resumos)})! Já existem "
-                     f"{len(existentes)} anúncios até R$ {config.ALUGUEL_MAXIMO} nos bairros:\n"
+                     f"{len(existentes)} anúncios até R$ {config.ALUGUEL_BUSCA} nos bairros:\n"
                      f"{linhas or '• nenhum'}\n\nA partir de agora aviso cada anúncio novo.")
 
     enviados = 0

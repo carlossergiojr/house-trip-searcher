@@ -9,8 +9,8 @@ import time
 
 from radar import config
 from radar.comum.navegador import ERROS_DE_PAGINA, abrir, navegador, rolar_ate_o_fim
-from radar.comum.texto import precos
-from radar.imoveis.modelo import Imovel, bairro_alvo
+from radar.comum.texto import precos, taxa
+from radar.imoveis.modelo import ROTULO_CONDOMINIO, ROTULO_IPTU, Imovel, bairro_alvo
 
 CATEGORIAS = {"casa": "casas", "apartamento": "apartamentos"}
 URL = ("https://www.olx.com.br/imoveis/aluguel/{categoria}/estado-ba/feira-de-santana"
@@ -19,7 +19,10 @@ URL = ("https://www.olx.com.br/imoveis/aluguel/{categoria}/estado-ba/feira-de-sa
 JS_CARDS = """() => [...document.querySelectorAll('section.olx-adcard')].map(s => {
   const a = [...s.querySelectorAll('a')].find(a => /-\\d{9,}$/.test(a.href.split('?')[0]));
   const img = s.querySelector('img');
-  return a ? {href: a.href.split('?')[0], txt: s.innerText, img: img ? (img.currentSrc || img.src) : null} : null;
+  // Os ícones de quartos/banheiros/vagas só têm o número no texto; o nome fica no aria-label.
+  const rotulos = [...s.querySelectorAll('[aria-label]')].map(e => e.getAttribute('aria-label')).join('\\n');
+  return a ? {href: a.href.split('?')[0], txt: s.innerText, rotulos,
+              img: img ? (img.currentSrc || img.src) : null} : null;
 }).filter(Boolean)"""
 
 
@@ -36,6 +39,14 @@ def parse_card(tipo: str, card: dict) -> Imovel | None:
     if "comercial" in titulo.lower():
         return None
     m_area = re.search(r"(\d+)\s*m²", card["txt"])
+    rotulos = card.get("rotulos", "")
+
+    def quantidade(nome: str) -> int | None:
+        m = re.search(rf"(\d+)\s+{nome}", rotulos, re.I)
+        return int(m.group(1)) if m else None
+
+    # Na Bahia "3/4" no título quer dizer 3 quartos.
+    m_titulo = re.search(r"(\d+)\s*(?:/\s*4|quartos?)\b", titulo, re.I)
     return Imovel(
         site="olx",
         id=m_id.group(1),
@@ -45,6 +56,11 @@ def parse_card(tipo: str, card: dict) -> Imovel | None:
         preco=_aluguel(card["txt"]),
         area=int(m_area.group(1)) if m_area else None,
         foto=card.get("img"),
+        quartos=quantidade("quarto") or (int(m_titulo.group(1)) if m_titulo else None),
+        banheiros=quantidade("banheiro"),
+        vagas=quantidade("vaga"),
+        condominio=taxa(card["txt"], ROTULO_CONDOMINIO),
+        iptu=taxa(card["txt"], ROTULO_IPTU),
     )
 
 
@@ -79,7 +95,7 @@ def _buscar_categoria(page, tipo: str, categoria: str) -> list[Imovel]:
     imoveis = []
     for pagina in range(1, config.PAGINAS_POR_SITE + 1):
         try:
-            abrir(page, URL.format(categoria=categoria, teto=config.ALUGUEL_MAXIMO, pagina=pagina))
+            abrir(page, URL.format(categoria=categoria, teto=config.ALUGUEL_BUSCA, pagina=pagina))
         except ERROS_DE_PAGINA:
             if pagina == 1:
                 raise
