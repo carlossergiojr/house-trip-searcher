@@ -40,6 +40,8 @@ def main() -> None:
     p_imoveis = sub.add_parser("imoveis", help="busca imóveis novos e avisa no Telegram")
     p_imoveis.add_argument("--simular", action="store_true",
                            help="só imprime no terminal; não envia nem salva nada")
+    p_imoveis.add_argument("--todos", action="store_true",
+                           help="envia todos os anúncios atuais, inclusive os já avisados")
     p_imoveis.add_argument("--sites", help="lista separada por vírgula (olx,vivareal)")
 
     p_chat = sub.add_parser("descobrir-chat", help="descobre o chat_id do grupo e salva no .env")
@@ -49,6 +51,7 @@ def main() -> None:
     if args.comando == "imoveis":
         from radar.imoveis.run import rodar
 
-        rodar(simular=args.simular, sites=args.sites.split(",") if args.sites else None)
+        rodar(simular=args.simular, sites=args.sites.split(",") if args.sites else None,
+              todos=args.todos)
     elif args.comando == "descobrir-chat":
         descobrir_chat(args.tema.upper())

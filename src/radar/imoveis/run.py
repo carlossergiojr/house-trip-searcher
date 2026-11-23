@@ -14,7 +14,8 @@ BUSCAS = {
 }
 
 
-def rodar(simular: bool = False, sites: list[str] | None = None) -> None:
+def rodar(simular: bool = False, sites: list[str] | None = None, todos: bool = False) -> None:
+    """todos=True envia todos os anúncios atuais, mesmo os já vistos."""
     bot = Telegram("IMOVEIS", simular=simular)
     memoria = Memoria(config.DADOS / "imoveis.json")
     primeira_vez = memoria.primeira_vez
@@ -36,7 +37,7 @@ def rodar(simular: bool = False, sites: list[str] | None = None) -> None:
         memoria.registrar_sucesso(site)
         print(f"[{site}] {len(encontrados)} anúncios nos bairros")
         for imovel in encontrados:
-            if not memoria.ja_viu(imovel.chave):
+            if todos or not memoria.ja_viu(imovel.chave):
                 memoria.marcar(imovel.chave)
                 novos.append(imovel)
 
@@ -44,7 +45,7 @@ def rodar(simular: bool = False, sites: list[str] | None = None) -> None:
         for imovel in novos:
             print(f"  {imovel.chave} | {imovel.legenda()}\n")
 
-    if primeira_vez:
+    if primeira_vez and not todos:
         # Não inunda o grupo: manda um resumo e só avisa novidades a partir daqui.
         por_bairro: dict[str, int] = {}
         for i in novos:

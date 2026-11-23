@@ -44,6 +44,7 @@ cp .env.example .env   # se ainda não existir
 uv run radar imoveis --simular          # mostra no terminal, não envia nem salva
 uv run radar imoveis                    # roda de verdade
 uv run radar imoveis --sites olx        # só um site
+uv run radar imoveis --todos            # reenvia todos os anúncios atuais
 ```
 
 ## Rodar de hora em hora (cron)
@@ -52,10 +53,11 @@ uv run radar imoveis --sites olx        # só um site
 crontab -e
 ```
 
-Adicione a linha (o minuto 17 evita horário cheio):
+Adicione as linhas (toda hora cheia e 3 min após ligar o PC):
 
 ```
-17 * * * * /home/clsc/code/projetos/my-git/house-trip-searcher/scripts/rodar-imoveis.sh
+0 * * * * /home/clsc/code/projetos/my-git/house-trip-searcher/scripts/rodar-imoveis.sh
+@reboot sleep 180 && /home/clsc/code/projetos/my-git/house-trip-searcher/scripts/rodar-imoveis.sh
 ```
 
 - **Log:** `logs/imoveis.log`
