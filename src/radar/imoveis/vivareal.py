@@ -12,7 +12,7 @@ import re
 import time
 
 from radar import config
-from radar.comum.navegador import Bloqueado, abrir, navegador
+from radar.comum.navegador import ERROS_DE_PAGINA, abrir, navegador
 from radar.comum.texto import extrair_preco
 from radar.imoveis.modelo import Imovel, bairro_alvo
 
@@ -66,7 +66,8 @@ def parse_card(site: str, card: dict) -> Imovel | None:
 
 
 def buscar() -> list[Imovel]:
-    imoveis, erros = [], []
+    """Só falha se todos os bairros falharem ou vierem sem nenhum anúncio."""
+    imoveis, erros, total_cards = [], [], 0
     for n, slug in enumerate(config.VIVAREAL_BAIRROS):
         if n:
             time.sleep(random.uniform(20, 40))
@@ -74,10 +75,14 @@ def buscar() -> list[Imovel]:
             with navegador() as page:
                 abrir(page, URL.format(slug=slug, teto=config.ALUGUEL_MAXIMO))
                 cards = page.evaluate(JS_CARDS)
-        except Bloqueado as erro:
+        except ERROS_DE_PAGINA as erro:
+            print(f"[vivareal/{slug}] {erro}")
             erros.append(erro)
             continue
+        total_cards += len(cards)
         imoveis += [i for c in cards if (i := parse_card("vivareal", c))]
     if len(erros) == len(config.VIVAREAL_BAIRROS):
         raise erros[0]
+    if not total_cards:
+        raise RuntimeError("vivareal: nenhum anúncio em nenhum bairro (layout mudou ou captcha?)")
     return imoveis

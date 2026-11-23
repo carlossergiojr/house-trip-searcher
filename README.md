@@ -15,7 +15,7 @@ Configurado em [`src/radar/config.py`](src/radar/config.py):
   - **VivaReal:** página de cada bairro. Luiz Eduardo e Jomafa não existem como bairro no VivaReal, então só chegam pela OLX.
   - O ZAP não é lido porque mostra os mesmos anúncios do VivaReal.
 
-Na primeira execução ele manda só um resumo ("já existem X anúncios"). Depois disso, manda cada anúncio novo, com foto, uma única vez.
+Na primeira vez que lê cada site ele manda só um resumo ("já existem X anúncios"). Depois disso, manda cada anúncio novo, com foto, uma única vez. Se o Telegram falhar no meio do envio, os anúncios que faltaram vão na rodada seguinte.
 
 ## Instalação
 

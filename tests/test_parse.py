@@ -52,3 +52,33 @@ def test_luiz_eduardo_variacao():
     card = {"href": "https://www.zapimoveis.com.br/imovel/aluguel-casa-2-quartos-conjunto-"
                     "luis-eduardo-magalhaes-feira-de-santana-ba-70m2-id-2900000002/", "txt": "R$ 1.200"}
     assert vivareal.parse_card("zap", card).bairro == "Conjunto Luiz Eduardo"
+
+
+def test_bairro_parecido_nao_conta():
+    from radar.imoveis.modelo import bairro_alvo
+    assert bairro_alvo("Brasília") == "Brasília"
+    assert bairro_alvo("Parque Brasília") is None
+    assert bairro_alvo("Jardim Brasília") is None
+    assert bairro_alvo("Conjunto Luiz Eduardo Magalhães") == "Conjunto Luiz Eduardo"
+    assert bairro_alvo("casa-3-quartos-santa-monica-bairros".replace("-", " ")) == "Santa Mônica"
+
+
+def test_preco_estranho_nao_quebra():
+    from radar.comum.texto import extrair_preco
+    assert extrair_preco("R$ .") is None
+    assert extrair_preco("R$ 1.600,00 /mês") == 1600
+
+
+def test_olx_preco_com_desconto_e_iptu():
+    card = {"href": "https://ba.olx.com.br/x/imoveis/casa-1555000001",
+            "txt": "Casa 3/4\nR$ 2.700\nR$ 2.400\nIPTU R$ 50\nCondomínio R$ 300\n"
+                   "Feira de Santana, Brasília"}
+    i = olx.parse_card("casa", card)
+    assert i.preco == 2400 and interessa(i)
+
+
+def test_olx_titulo_cita_a_cidade():
+    card = {"href": "https://ba.olx.com.br/x/imoveis/casa-1555000002",
+            "txt": "Casa perto da Av. Feira de Santana, centro\nR$ 1.000\n"
+                   "Feira de Santana, Brasília"}
+    assert olx.parse_card("casa", card).bairro == "Brasília"

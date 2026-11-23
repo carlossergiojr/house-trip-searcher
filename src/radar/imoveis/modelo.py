@@ -36,12 +36,21 @@ class Imovel:
         )
 
 
+# Palavras que, antes do nome, indicam outro bairro ("Parque Brasília" não é o Brasília).
+PREFIXOS_DE_OUTRO_BAIRRO = {"parque", "jardim", "vila", "residencial", "loteamento",
+                            "recanto", "nova", "novo"}
+
+
 def bairro_alvo(texto: str) -> str | None:
     """Nome do bairro de interesse mencionado no texto, ou None."""
-    alvo = f" {normalizar(texto)} "
+    palavras = normalizar(texto).split()
     for nome, variacoes in config.BAIRROS.items():
-        if any(f" {v} " in alvo for v in variacoes):
-            return nome
+        for variacao in variacoes:
+            v = variacao.split()
+            for k in range(len(palavras) - len(v) + 1):
+                if palavras[k:k + len(v)] == v and (
+                        k == 0 or palavras[k - 1] not in PREFIXOS_DE_OUTRO_BAIRRO):
+                    return nome
     return None
 
 

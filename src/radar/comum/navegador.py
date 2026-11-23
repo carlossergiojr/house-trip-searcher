@@ -3,6 +3,7 @@
 import random
 from contextlib import contextmanager
 
+from playwright.sync_api import Error as ErroPlaywright
 from playwright.sync_api import Page, sync_playwright
 
 USER_AGENT = (
@@ -13,6 +14,10 @@ USER_AGENT = (
 
 class Bloqueado(Exception):
     pass
+
+
+# Falhas de uma página (bloqueio, timeout, layout): a busca segue para a próxima.
+ERROS_DE_PAGINA = (Bloqueado, RuntimeError, ErroPlaywright)
 
 
 @contextmanager

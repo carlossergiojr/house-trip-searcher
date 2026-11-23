@@ -1,6 +1,7 @@
 """Envio de mensagens por um bot do Telegram."""
 
 import os
+import time
 
 import httpx
 
@@ -10,10 +11,11 @@ API = "https://api.telegram.org/bot{token}/{metodo}"
 class Telegram:
     """Bot de um tema. Lê <PREFIXO>_BOT_TOKEN e <PREFIXO>_CHAT_ID do ambiente."""
 
-    def __init__(self, prefixo: str, simular: bool = False):
+    def __init__(self, prefixo: str, simular: bool = False, cliente: httpx.Client | None = None):
         self.token = os.getenv(f"{prefixo}_BOT_TOKEN", "")
         self.chat_id = os.getenv(f"{prefixo}_CHAT_ID", "")
         self.simular = simular
+        self._http = cliente or httpx.Client(timeout=30)
         if not simular and not (self.token and self.chat_id):
             raise SystemExit(
                 f"Faltam {prefixo}_BOT_TOKEN e/ou {prefixo}_CHAT_ID no .env "
@@ -21,7 +23,16 @@ class Telegram:
             )
 
     def _chamar(self, metodo: str, **dados) -> dict:
-        r = httpx.post(API.format(token=self.token, metodo=metodo), data=dados, timeout=30)
+        """Se o Telegram pedir para esperar (429, mensagens demais), espera e tenta de novo."""
+        for tentativa in range(3):
+            r = self._http.post(API.format(token=self.token, metodo=metodo), data=dados)
+            if r.status_code != 429 or tentativa == 2:
+                break
+            try:
+                espera = r.json()["parameters"]["retry_after"]
+            except (ValueError, KeyError, TypeError):
+                espera = 5
+            time.sleep(min(espera, 60) + 1)
         r.raise_for_status()
         return r.json()
 
@@ -41,8 +52,11 @@ class Telegram:
                 self._chamar("sendPhoto", chat_id=self.chat_id, photo=url_foto,
                              caption=legenda, parse_mode="HTML")
                 return
-            except httpx.HTTPError:
-                pass  # foto inacessível para o Telegram: manda só o texto
+            except httpx.HTTPStatusError as erro:
+                # 400 = foto inacessível para o Telegram: manda só o texto.
+                # Outros erros sobem, para não mandar o mesmo anúncio duas vezes.
+                if erro.response.status_code != 400:
+                    raise
         self.texto(legenda)
 
 
