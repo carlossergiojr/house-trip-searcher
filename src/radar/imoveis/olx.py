@@ -3,10 +3,12 @@
 O bairro vem no card como "Feira de Santana, Brasília".
 """
 
+import random
 import re
+import time
 
 from radar import config
-from radar.comum.navegador import Bloqueado, abrir, navegador
+from radar.comum.navegador import Bloqueado, abrir, navegador, rolar_ate_o_fim
 from radar.comum.texto import extrair_preco
 from radar.imoveis.modelo import Imovel, bairro_alvo
 
@@ -46,22 +48,34 @@ def parse_card(tipo: str, card: dict) -> Imovel | None:
 
 
 def buscar() -> list[Imovel]:
-    with navegador() as page:
-        return _buscar(page)
+    """Cada categoria num navegador novo; só falha se todas falharem."""
+    imoveis, erros = [], []
+    for n, (tipo, categoria) in enumerate(CATEGORIAS.items()):
+        if n:
+            time.sleep(random.uniform(15, 30))
+        try:
+            with navegador() as page:
+                imoveis += _buscar_categoria(page, tipo, categoria)
+        except (Bloqueado, RuntimeError) as erro:
+            print(f"[olx/{categoria}] {erro}")
+            erros.append(erro)
+    if len(erros) == len(CATEGORIAS):
+        raise erros[0]
+    return imoveis
 
 
-def _buscar(page) -> list[Imovel]:
+def _buscar_categoria(page, tipo: str, categoria: str) -> list[Imovel]:
     imoveis = []
-    for tipo, categoria in CATEGORIAS.items():
-        for pagina in range(1, config.PAGINAS_POR_SITE + 1):
-            try:
-                abrir(page, URL.format(categoria=categoria, teto=config.ALUGUEL_MAXIMO, pagina=pagina))
-            except Bloqueado:
-                if pagina == 1:
-                    raise
-                break  # bloqueou só as páginas seguintes: fica com o que já leu
-            cards = page.evaluate(JS_CARDS)
-            if pagina == 1 and not cards:
-                raise RuntimeError(f"olx/{categoria}: nenhum anúncio na página (layout mudou?)")
-            imoveis += [i for c in cards if (i := parse_card(tipo, c))]
+    for pagina in range(1, config.PAGINAS_POR_SITE + 1):
+        try:
+            abrir(page, URL.format(categoria=categoria, teto=config.ALUGUEL_MAXIMO, pagina=pagina))
+        except Bloqueado:
+            if pagina == 1:
+                raise
+            break  # bloqueou só as páginas seguintes: fica com o que já leu
+        rolar_ate_o_fim(page)
+        cards = page.evaluate(JS_CARDS)
+        if pagina == 1 and not cards:
+            raise RuntimeError(f"olx/{categoria}: nenhum anúncio na página (layout mudou?)")
+        imoveis += [i for c in cards if (i := parse_card(tipo, c))]
     return imoveis

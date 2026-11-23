@@ -34,7 +34,7 @@ TIPOS_RESIDENCIAIS = [
 ]
 
 # Quantas páginas de resultado ler na OLX a cada execução (por categoria).
-PAGINAS_POR_SITE = 2
+PAGINAS_POR_SITE = 1  # 50 anúncios mais recentes por categoria, de hora em hora
 
 # Após quantas falhas seguidas de um site o bot avisa no Telegram.
 FALHAS_PARA_AVISAR = 3

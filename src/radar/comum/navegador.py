@@ -34,3 +34,16 @@ def abrir(page: Page, url: str) -> None:
     page.wait_for_timeout(4000)  # anúncios carregam depois do HTML
     if resp is None or resp.status >= 400:
         raise Bloqueado(f"HTTP {resp.status if resp else '?'} em {url}")
+
+
+def rolar_ate_o_fim(page: Page) -> None:
+    """Rola a página aos poucos: alguns sites só montam o card quando ele aparece na tela."""
+    for _ in range(40):
+        no_fim = page.evaluate(
+            "() => { window.scrollBy(0, 800);"
+            " return window.innerHeight + window.scrollY >= document.body.scrollHeight - 10; }"
+        )
+        page.wait_for_timeout(250)
+        if no_fim:
+            break
+    page.wait_for_timeout(1000)
