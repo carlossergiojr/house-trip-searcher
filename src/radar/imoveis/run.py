@@ -2,6 +2,7 @@
 
 import time
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 from html import escape
 
 from radar import config
@@ -38,23 +39,41 @@ def _avisar(bot: Telegram, mensagem: str) -> None:
         print(f"[telegram] aviso não enviado: {erro}")
 
 
+def _buscar_todos(sites: list[str]) -> dict[str, list[Imovel] | Exception]:
+    """Busca os sites ao mesmo tempo, um por thread.
+
+    São sites diferentes: rodar junto não aumenta o risco de bloqueio, e a rodada
+    leva o tempo do site mais lento em vez da soma (as pausas de cada site continuam).
+    """
+    with ThreadPoolExecutor(max_workers=max(len(sites), 1)) as pool:
+        futuros = {site: pool.submit(BUSCAS[site]) for site in sites}
+    resultados: dict[str, list[Imovel] | Exception] = {}
+    for site, futuro in futuros.items():
+        try:
+            resultados[site] = futuro.result()
+        except Exception as erro:
+            resultados[site] = erro
+    return resultados
+
+
 def _rodar(bot: Telegram, memoria: Memoria, simular: bool, sites: list[str], todos: bool) -> None:
     novos: dict[str, Imovel] = {}
     resumos: dict[str, list[Imovel]] = {}  # sites lidos pela primeira vez
     for site in sites:
         if site not in BUSCAS:
             print(f"[{site}] site desconhecido (opções: {', '.join(BUSCAS)})")
-            continue
-        try:
-            encontrados = [i for i in BUSCAS[site]() if interessa(i)]
-        except Exception as erro:
+    resultados = _buscar_todos([s for s in sites if s in BUSCAS])
+    for site, resultado in resultados.items():
+        if isinstance(resultado, Exception):
+            erro = resultado
             falhas = memoria.registrar_falha(site)
             print(f"[{site}] falhou ({falhas}x seguidas): {erro}")
-            traceback.print_exc()
+            traceback.print_exception(erro)
             if falhas == config.FALHAS_PARA_AVISAR:
                 _avisar(bot, f"⚠️ {site} falhou {falhas} vezes seguidas "
                              f"(provável bloqueio). Último erro: {escape(str(erro)[:200])}")
             continue
+        encontrados = [i for i in resultado if interessa(i)]
         if memoria.falhas.get(site, 0) >= config.FALHAS_PARA_AVISAR:
             _avisar(bot, f"✅ {site} voltou a funcionar.")
         memoria.registrar_sucesso(site)

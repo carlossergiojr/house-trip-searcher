@@ -1,6 +1,7 @@
 """Fluxo de uma rodada com sites e bot falsos (sem rede)."""
 
 import json
+import threading
 
 import pytest
 
@@ -145,3 +146,20 @@ def test_todos_reenvia_os_ja_vistos(ambiente, tmp_path):
     run.rodar()
     run.rodar(todos=True)
     assert len(bot.fotos()) == 2
+
+
+def test_sites_buscados_ao_mesmo_tempo(ambiente, tmp_path, monkeypatch):
+    """Cada busca espera a outra começar: em sequência, a barreira estoura e o site falha."""
+    bot, sites = ambiente
+    barreira = threading.Barrier(2, timeout=5)
+
+    def busca(nome):
+        def buscar():
+            barreira.wait()
+            return [imovel(nome, "1")]
+        return buscar
+
+    monkeypatch.setattr(run, "BUSCAS", {"olx": busca("olx"), "vivareal": busca("vivareal")})
+    run.rodar()
+    assert estado(tmp_path)["falhas"] == {"olx": 0, "vivareal": 0}
+    assert "2 anúncios" in bot.textos()[0]
