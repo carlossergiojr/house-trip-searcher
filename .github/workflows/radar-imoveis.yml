@@ -1,9 +1,11 @@
 name: Radar de imóveis
 
 on:
-  schedule:
-    # Hora em UTC. Minuto 7 porque na hora cheia o GitHub atrasa as execuções agendadas.
-    - cron: "7 * * * *"
+  # Desligado: OLX e VivaReal respondem 403 aos IPs do GitHub (testado em 2026-11-24).
+  # Para religar (ex.: com proxy residencial), descomente as linhas abaixo.
+  # schedule:
+  #   # Hora em UTC. Minuto 7 porque na hora cheia o GitHub atrasa as execuções agendadas.
+  #   - cron: "7 * * * *"
   workflow_dispatch: # botão "Run workflow" na aba Actions
 
 permissions:

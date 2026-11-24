@@ -50,7 +50,9 @@ uv run radar imoveis --todos            # reenvia todos os anúncios atuais
 
 ## Rodar na nuvem (GitHub Actions)
 
-O workflow [`.github/workflows/radar-imoveis.yml`](.github/workflows/radar-imoveis.yml) roda de hora em hora no minuto 7, sem precisar do PC ligado.
+O workflow [`.github/workflows/radar-imoveis.yml`](.github/workflows/radar-imoveis.yml) roda a busca sem precisar do PC ligado.
+
+> **Agendamento desligado.** No teste de 2026-11-24, OLX e VivaReal responderam 403 a todas as páginas vindas do GitHub. Hoje o radar roda pelo cron do PC. Para religar a nuvem, é preciso um proxy residencial; depois descomente o `schedule` no workflow.
 
 1. Em **Settings → Secrets and variables → Actions**, crie os secrets `IMOVEIS_BOT_TOKEN` e `IMOVEIS_CHAT_ID` com os mesmos valores do `.env`.
 2. Na aba **Actions**, abra "Radar de imóveis" e clique em **Run workflow** para testar.
