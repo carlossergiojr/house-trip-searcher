@@ -1,0 +1,14 @@
+// Regra de acesso do Tailscale (Access controls → editor de arquivo).
+// - Seus aparelhos (logados na sua conta) continuam se enxergando normalmente.
+// - O GitHub Actions (tag:ci) só pode usar o tablet como saída para a internet:
+//   não acessa o tablet, o notebook, o roteador nem nada da rede de casa.
+{
+	"tagOwners": {
+		"tag:ci": ["autogroup:admin"],
+	},
+
+	"grants": [
+		{"src": ["autogroup:member"], "dst": ["*"], "ip": ["*"]},
+		{"src": ["tag:ci"], "dst": ["autogroup:internet"], "ip": ["*"]},
+	],
+}

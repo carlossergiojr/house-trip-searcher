@@ -1,7 +1,9 @@
 {
  "vistos": [
+  "olx:1516628980",
   "olx:1555328322",
   "olx:1555368410",
+  "olx:1555617376",
   "vivareal:2876544390",
   "vivareal:2899130712",
   "vivareal:2902852396",
@@ -15,11 +17,12 @@
   "vivareal:2919578261",
   "vivareal:2919881544",
   "vivareal:2921009865",
-  "vivareal:2922192227"
+  "vivareal:2922192227",
+  "vivareal:2924190166"
  ],
  "falhas": {
-  "olx": 1,
-  "vivareal": 1
+  "olx": 0,
+  "vivareal": 0
  },
  "iniciados": [
   "olx",

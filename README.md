@@ -52,15 +52,45 @@ uv run radar imoveis --todos            # reenvia todos os anúncios atuais
 
 O workflow [`.github/workflows/radar-imoveis.yml`](.github/workflows/radar-imoveis.yml) roda a busca sem precisar do PC ligado.
 
-> **Agendamento desligado.** No teste de 2026-11-24, OLX e VivaReal responderam 403 a todas as páginas vindas do GitHub. Hoje o radar roda pelo cron do PC. Para religar a nuvem, é preciso um proxy residencial; depois descomente o `schedule` no workflow.
+OLX e VivaReal bloqueiam os IPs do GitHub (403). Por isso a internet do workflow sai por um tablet Android de casa, via [Tailscale](https://tailscale.com) (grátis).
 
-1. Em **Settings → Secrets and variables → Actions**, crie os secrets `IMOVEIS_BOT_TOKEN` e `IMOVEIS_CHAT_ID` com os mesmos valores do `.env`.
-2. Na aba **Actions**, abra "Radar de imóveis" e clique em **Run workflow** para testar.
-3. Se funcionar, desligue o cron local (abaixo). Os dois juntos têm estados separados e mandam anúncios repetidos.
+> **Agendamento desligado** até o primeiro teste pelo tablet passar. Depois, descomente o `schedule` no workflow e desligue o cron do PC.
 
-- **Log:** na própria execução, na aba Actions.
+### Tablet (uma vez)
+
+1. Crie uma conta no Tailscale e ative a verificação em duas etapas.
+2. No tablet, instale o app Tailscale, entre na conta e ligue **Run as exit node**.
+3. Tire o Tailscale da economia de bateria do Android, para ele não ser fechado em segundo plano.
+4. No painel do Tailscale, em **Machines**, aprove o tablet como exit node (menu `...` → **Edit route settings** → **Use as exit node**).
+
+### Regra de acesso
+
+Em **Access controls**, troque o conteúdo pelo de [`docs/tailscale-politica.hujson`](docs/tailscale-politica.hujson). Ela deixa o GitHub usar só a internet do tablet, sem acesso ao tablet nem à rede de casa.
+
+### Login do GitHub no Tailscale (sem chave guardada)
+
+1. No painel do Tailscale, abra **Settings → Trust credentials** → **Credential** → **OpenID Connect**.
+2. Issuer: **GitHub Actions**. Subject: `repo:carlossergiojr/house-trip-searcher:ref:refs/heads/main`.
+3. Escopo: **Auth Keys** com escrita, tag `tag:ci`. Gere e copie o **Client ID** e o **Audience**.
+
+### Secrets do GitHub
+
+Em **Settings → Secrets and variables → Actions**:
+
+| Secret | Valor |
+|---|---|
+| `IMOVEIS_BOT_TOKEN`, `IMOVEIS_CHAT_ID` | os mesmos do `.env` |
+| `TS_OAUTH_CLIENT_ID` | Client ID do passo anterior |
+| `TS_AUDIENCE` | Audience do passo anterior |
+| `TS_EXIT_NODE` | IP do tablet no Tailscale (100.x.y.z, aparece no app) |
+
+### Testar
+
+Na aba **Actions**, abra "Radar de imóveis" e clique em **Run workflow**. O passo "Conferir saída pela casa" falha se a internet não estiver saindo pelo tablet; nesse caso a busca nem roda.
+
+- **Log:** na própria execução, na aba Actions. O IP de casa nunca é impresso, porque o log é público.
 - **Anúncios já vistos:** `dados/imoveis.json`, salvo no repositório por um commit automático sempre que muda. Faça `git pull` antes de mexer no projeto.
-- **Bloqueio:** os sites podem bloquear os IPs do GitHub. Nesse caso o bot avisa no grupo depois de 3 falhas seguidas.
+- **Tablet desligado ou fora de casa:** a rodada falha e o GitHub manda e-mail. O aviso no grupo não sai, porque sem o tablet o workflow fica sem internet.
 
 ## Rodar de hora em hora no PC (cron)
 

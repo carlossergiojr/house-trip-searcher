@@ -1,8 +1,8 @@
 name: Radar de imóveis
 
 on:
-  # Desligado: OLX e VivaReal respondem 403 aos IPs do GitHub (testado em 2026-11-24).
-  # Para religar (ex.: com proxy residencial), descomente as linhas abaixo.
+  # Desligado até o teste pelo tablet passar. Sem o tablet, OLX e VivaReal respondem 403
+  # aos IPs do GitHub (testado em 2026-11-24). Para religar, descomente as linhas abaixo.
   # schedule:
   #   # Hora em UTC. Minuto 7 porque na hora cheia o GitHub atrasa as execuções agendadas.
   #   - cron: "7 * * * *"
@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write # para salvar dados/imoveis.json no repositório
+  id-token: write # login no Tailscale sem chave guardada (identidade do GitHub)
 
 # Nunca duas rodadas ao mesmo tempo (mesmo papel do flock no cron local).
 concurrency:
@@ -37,6 +38,32 @@ jobs:
         run: |
           uv sync --frozen
           uv run playwright install --with-deps chromium
+
+      # Os sites bloqueiam IPs do GitHub: a partir daqui a internet sai pelo tablet de casa.
+      # A regra de acesso do Tailscale (docs/tailscale-politica.hujson) só deixa este
+      # aparelho usar a internet do tablet, sem acesso ao tablet nem à rede de casa.
+      - name: Conectar ao tablet (Tailscale)
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          audience: ${{ secrets.TS_AUDIENCE }}
+          tags: tag:ci
+          hostname: radar-github
+          args: --exit-node=${{ secrets.TS_EXIT_NODE }}
+
+      # Não imprime o IP (o log é público): só confere que não é mais o do GitHub.
+      - name: Conferir saída pela casa
+        run: |
+          provedor=$(curl -sS --max-time 20 https://ipinfo.io/org) || {
+            echo "Sem internet pelo tablet: ele está ligado, no Wi-Fi e com o Tailscale ativo?"
+            exit 1
+          }
+          case "$provedor" in
+            *Microsoft*|*Azure*|*GitHub*)
+              echo "A internet ainda sai pelo GitHub, não pelo tablet."
+              exit 1 ;;
+          esac
+          echo "Saindo pela internet de casa."
 
       - name: Buscar e avisar
         env:
