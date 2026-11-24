@@ -70,7 +70,7 @@ Em **Access controls**, troque o conteúdo pelo de [`docs/tailscale-politica.huj
 ### Login do GitHub no Tailscale (sem chave guardada)
 
 1. No painel do Tailscale, abra **Settings → Trust credentials** → **Credential** → **OpenID Connect**.
-2. Issuer: **GitHub Actions**. Subject: `repo:carlossergiojr/house-trip-searcher:ref:refs/heads/main`.
+2. Issuer: **GitHub Actions**. Subject: `repo:carlossergiojr@134062725/house-trip-searcher@1468863367:ref:refs/heads/main`. O GitHub inclui os ids numéricos do dono e do repositório; se o login falhar, a página da credencial mostra o subject recebido ("Received ...").
 3. Escopo: **Auth Keys** com escrita, tag `tag:ci`. Gere e copie o **Client ID** e o **Audience**.
 
 ### Secrets do GitHub
