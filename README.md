@@ -48,7 +48,19 @@ uv run radar imoveis --sites olx        # só um site
 uv run radar imoveis --todos            # reenvia todos os anúncios atuais
 ```
 
-## Rodar de hora em hora (cron)
+## Rodar na nuvem (GitHub Actions)
+
+O workflow [`.github/workflows/radar-imoveis.yml`](.github/workflows/radar-imoveis.yml) roda de hora em hora no minuto 7, sem precisar do PC ligado.
+
+1. Em **Settings → Secrets and variables → Actions**, crie os secrets `IMOVEIS_BOT_TOKEN` e `IMOVEIS_CHAT_ID` com os mesmos valores do `.env`.
+2. Na aba **Actions**, abra "Radar de imóveis" e clique em **Run workflow** para testar.
+3. Se funcionar, desligue o cron local (abaixo). Os dois juntos têm estados separados e mandam anúncios repetidos.
+
+- **Log:** na própria execução, na aba Actions.
+- **Anúncios já vistos:** `dados/imoveis.json`, salvo no repositório por um commit automático sempre que muda. Faça `git pull` antes de mexer no projeto.
+- **Bloqueio:** os sites podem bloquear os IPs do GitHub. Nesse caso o bot avisa no grupo depois de 3 falhas seguidas.
+
+## Rodar de hora em hora no PC (cron)
 
 ```bash
 crontab -e

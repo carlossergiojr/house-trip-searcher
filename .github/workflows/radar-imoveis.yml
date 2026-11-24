@@ -1,0 +1,60 @@
+name: Radar de imóveis
+
+on:
+  schedule:
+    # Hora em UTC. Minuto 7 porque na hora cheia o GitHub atrasa as execuções agendadas.
+    - cron: "7 * * * *"
+  workflow_dispatch: # botão "Run workflow" na aba Actions
+
+permissions:
+  contents: write # para salvar dados/imoveis.json no repositório
+
+# Nunca duas rodadas ao mesmo tempo (mesmo papel do flock no cron local).
+concurrency:
+  group: radar-imoveis
+  cancel-in-progress: false
+
+jobs:
+  rodar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Cache do Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+
+      - name: Instalar
+        run: |
+          uv sync --frozen
+          uv run playwright install --with-deps chromium
+
+      - name: Buscar e avisar
+        env:
+          IMOVEIS_BOT_TOKEN: ${{ secrets.IMOVEIS_BOT_TOKEN }}
+          IMOVEIS_CHAT_ID: ${{ secrets.IMOVEIS_CHAT_ID }}
+        run: uv run radar imoveis
+
+      # Roda mesmo se a busca quebrar: o radar salva o que já enviou antes de sair.
+      # Só commita se o estado mudou. Esses commits contam como atividade: sem nenhuma
+      # em 60 dias, o GitHub desliga o agendamento de repositórios públicos.
+      - name: Salvar estado
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dados/imoveis.json
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: estado do radar de imóveis"
+          for tentativa in 1 2 3; do
+            git pull --rebase && git push && exit 0
+            sleep 5
+          done
+          exit 1
