@@ -54,7 +54,7 @@ O workflow [`.github/workflows/radar-imoveis.yml`](.github/workflows/radar-imove
 
 OLX e VivaReal bloqueiam os IPs do GitHub (403). Por isso a internet do workflow sai por um tablet Android de casa, via [Tailscale](https://tailscale.com) (grátis).
 
-Roda de hora em hora (no minuto 7). O GitHub pode atrasar execuções agendadas em alguns minutos, e às vezes pula uma.
+Roda de hora em hora das 6h às 22h (06:07, 07:07... 22:07, horário de Feira de Santana). O GitHub pode atrasar execuções agendadas em alguns minutos, e às vezes pula uma.
 
 ### Tablet (uma vez)
 

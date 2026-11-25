@@ -3,8 +3,10 @@ name: Radar de imóveis
 on:
   # A internet sai pelo tablet de casa: sem ele, OLX e VivaReal respondem 403 aos IPs do GitHub.
   schedule:
-    # Hora em UTC. Minuto 7 porque na hora cheia o GitHub atrasa as execuções agendadas.
-    - cron: "7 * * * *"
+    # Das 6h às 22h de Feira de Santana (UTC-3, sem horário de verão). O cron é em UTC:
+    # 9h-23h UTC = 6h-20h local; 0h-1h UTC = 21h-22h local.
+    # Minuto 7 porque na hora cheia o GitHub atrasa as execuções agendadas.
+    - cron: "7 0,1,9-23 * * *"
   workflow_dispatch: # botão "Run workflow" na aba Actions
 
 permissions:
