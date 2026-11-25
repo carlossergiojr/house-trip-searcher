@@ -27,5 +27,23 @@
  "iniciados": [
   "olx",
   "vivareal"
- ]
+ ],
+ "dia": {
+  "data": "2026-11-25",
+  "rodadas": 1,
+  "primeira": "16:53",
+  "novos": 0,
+  "sites": {
+   "olx": {
+    "ok": 1,
+    "falhas": 0
+   },
+   "vivareal": {
+    "ok": 1,
+    "falhas": 0
+   }
+  },
+  "resumo_enviado": false,
+  "ultima": "16:53"
+ }
 }
