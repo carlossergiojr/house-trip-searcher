@@ -40,3 +40,7 @@ PAGINAS_POR_SITE = 1  # 50 anúncios mais recentes por categoria, de hora em hor
 
 # Após quantas falhas seguidas de um site o bot avisa no Telegram.
 FALHAS_PARA_AVISAR = 3
+
+# Resumo diário no grupo ("o radar está vivo"), na primeira rodada a partir desta hora.
+FUSO = "America/Bahia"  # Feira de Santana (UTC-3, sem horário de verão)
+HORA_RESUMO = 22

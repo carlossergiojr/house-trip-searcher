@@ -73,8 +73,9 @@ jobs:
         run: uv run radar imoveis
 
       # Roda mesmo se a busca quebrar: o radar salva o que já enviou antes de sair.
-      # Só commita se o estado mudou. Esses commits contam como atividade: sem nenhuma
-      # em 60 dias, o GitHub desliga o agendamento de repositórios públicos.
+      # O estado muda a cada rodada (contagem do dia para o resumo das 22h), então há um
+      # commit por rodada. Esses commits contam como atividade: sem nenhuma em 60 dias,
+      # o GitHub desliga o agendamento de repositórios públicos.
       - name: Salvar estado
         if: always()
         run: |

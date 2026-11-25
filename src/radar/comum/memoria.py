@@ -1,4 +1,5 @@
-"""Estado persistente em JSON: ids já vistos, falhas seguidas e sites já iniciados."""
+"""Estado persistente em JSON: ids já vistos, falhas seguidas, sites já iniciados e o
+contador do dia (para o resumo diário)."""
 
 import json
 from pathlib import Path
@@ -14,6 +15,9 @@ class Memoria:
         # tinham esse campo: vale todo site que já rodou com sucesso.
         self.iniciados: set[str] = set(
             dados.get("iniciados", [s for s, n in self.falhas.items() if n == 0]))
+        # {"data": "2026-11-25", "rodadas": 3, "primeira": "06:07", "ultima": "08:07",
+        #  "novos": 1, "sites": {"olx": {"ok": 3, "falhas": 0}}, "resumo_enviado": false}
+        self.dia: dict = dados.get("dia", {})
 
     def ja_viu(self, chave: str) -> bool:
         return chave in self.vistos
@@ -38,5 +42,5 @@ class Memoria:
         self.caminho.parent.mkdir(parents=True, exist_ok=True)
         tmp = self.caminho.with_suffix(".tmp")
         tmp.write_text(json.dumps({"vistos": sorted(self.vistos), "falhas": self.falhas,
-                                   "iniciados": sorted(self.iniciados)}, indent=1))
+                                   "iniciados": sorted(self.iniciados), "dia": self.dia}, indent=1))
         tmp.replace(self.caminho)

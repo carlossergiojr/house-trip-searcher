@@ -16,6 +16,8 @@ Configurado em [`src/radar/config.py`](src/radar/config.py):
   - **VivaReal:** página de cada bairro. Luiz Eduardo e Jomafa não existem como bairro no VivaReal, então só chegam pela OLX.
   - O ZAP não é lido porque mostra os mesmos anúncios do VivaReal.
 
+**Resumo diário:** na rodada das 22h o bot manda no grupo quantas rodadas fez no dia, quantos anúncios novos achou e se cada site funcionou. Serve para saber que ele está vivo mesmo nos dias sem anúncio novo: **se o resumo não chegar, algo parou** (tablet desligado, GitHub sem rodar...). Se a rodada das 22h falhar, o resumo vai atrasado na primeira rodada do dia seguinte. Horário em `HORA_RESUMO` no `config.py`.
+
 Na primeira vez que lê cada site ele manda só um resumo ("já existem X anúncios"). Depois disso, manda cada anúncio novo, com foto, uma única vez. Se o Telegram falhar no meio do envio, os anúncios que faltaram vão na rodada seguinte.
 
 ## Instalação
@@ -89,7 +91,7 @@ Em **Settings → Secrets and variables → Actions**:
 Na aba **Actions**, abra "Radar de imóveis" e clique em **Run workflow**. O passo "Conferir saída pela casa" falha se a internet não estiver saindo pelo tablet; nesse caso a busca nem roda.
 
 - **Log:** na própria execução, na aba Actions. O IP de casa nunca é impresso, porque o log é público.
-- **Anúncios já vistos:** `dados/imoveis.json`, salvo no repositório por um commit automático sempre que muda. Faça `git pull` antes de mexer no projeto.
+- **Anúncios já vistos e contagem do dia:** `dados/imoveis.json`, salvo no repositório por um commit automático a cada rodada. Faça `git pull` antes de mexer no projeto.
 - **Tablet desligado ou fora de casa:** a rodada falha e o GitHub manda e-mail. O aviso no grupo não sai, porque sem o tablet o workflow fica sem internet.
 
 ## Rodar de hora em hora no PC (cron)

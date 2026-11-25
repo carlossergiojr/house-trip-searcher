@@ -1,6 +1,8 @@
 """Fluxo de uma rodada com sites e bot falsos (sem rede)."""
 
 import json
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -55,7 +57,17 @@ def ambiente(tmp_path, monkeypatch):
     monkeypatch.setattr(run, "Telegram", lambda *a, **k: bot)
     monkeypatch.setattr(run, "BUSCAS", {n: busca(n) for n in sites})
     monkeypatch.setattr(run, "PAUSA_ENTRE_ENVIOS", 0)
+    relogio.agora = hora("2026-11-25 10:07")
+    monkeypatch.setattr(run, "agora", lambda: relogio.agora)
     return bot, sites
+
+
+class relogio:
+    agora = None
+
+
+def hora(texto):
+    return datetime.fromisoformat(texto).replace(tzinfo=ZoneInfo("America/Bahia"))
 
 
 def estado(tmp_path):
@@ -145,3 +157,51 @@ def test_todos_reenvia_os_ja_vistos(ambiente, tmp_path):
     run.rodar()
     run.rodar(todos=True)
     assert len(bot.fotos()) == 2
+
+
+def test_resumo_do_dia_sai_uma_vez_as_22h(ambiente, tmp_path):
+    bot, sites = ambiente
+    sites["vivareal"] = [imovel("vivareal", "1")]
+    relogio.agora = hora("2026-11-25 06:07")
+    run.rodar()  # primeira vez: resumo do que já existe
+    sites["olx"] = RuntimeError("403")
+    sites["vivareal"].append(imovel("vivareal", "2"))
+    relogio.agora = hora("2026-11-25 21:07")
+    run.rodar()
+    assert not any("Resumo do dia" in t for t in bot.textos())
+
+    relogio.agora = hora("2026-11-25 22:07")
+    run.rodar()
+    resumo = bot.textos()[-1]
+    assert "Resumo do dia 25/11" in resumo
+    assert "3 rodadas das 06:07 às 22:07" in resumo
+    assert "1 anúncio novo" in resumo
+    assert "OLX: 1 ok, 2 com falha" in resumo and "VivaReal: ok" in resumo
+
+    relogio.agora = hora("2026-11-25 22:40")  # rodada manual depois: não repete
+    run.rodar()
+    assert sum("Resumo do dia" in t for t in bot.textos()) == 1
+
+    relogio.agora = hora("2026-11-26 06:07")  # dia novo começa zerado
+    run.rodar()
+    assert estado(tmp_path)["dia"]["rodadas"] == 1
+    assert sum("Resumo do dia" in t for t in bot.textos()) == 1
+
+
+def test_resumo_que_nao_saiu_vai_atrasado_no_dia_seguinte(ambiente, tmp_path):
+    bot, sites = ambiente
+    relogio.agora = hora("2026-11-25 20:07")
+    run.rodar()
+    relogio.agora = hora("2026-11-26 06:07")  # a das 22h não rodou
+    run.rodar()
+    resumo = [t for t in bot.textos() if "Resumo do dia" in t]
+    assert len(resumo) == 1 and "25/11</b> (enviado com atraso)" in resumo[0]
+    assert "1 rodada às 20:07" in resumo[0] and "Nenhum anúncio novo" in resumo[0]
+
+
+def test_simulacao_nao_conta_no_resumo(ambiente, tmp_path):
+    bot, sites = ambiente
+    relogio.agora = hora("2026-11-25 22:07")
+    run.rodar(simular=True)
+    assert not (tmp_path / "imoveis.json").exists()
+    assert not any("Resumo do dia" in t for t in bot.textos())
