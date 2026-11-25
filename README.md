@@ -54,7 +54,7 @@ O workflow [`.github/workflows/radar-imoveis.yml`](.github/workflows/radar-imove
 
 OLX e VivaReal bloqueiam os IPs do GitHub (403). Por isso a internet do workflow sai por um tablet Android de casa, via [Tailscale](https://tailscale.com) (grátis).
 
-> **Agendamento desligado** até o primeiro teste pelo tablet passar. Depois, descomente o `schedule` no workflow e desligue o cron do PC.
+Roda de hora em hora (no minuto 7). O GitHub pode atrasar execuções agendadas em alguns minutos, e às vezes pula uma.
 
 ### Tablet (uma vez)
 
@@ -93,6 +93,8 @@ Na aba **Actions**, abra "Radar de imóveis" e clique em **Run workflow**. O pas
 - **Tablet desligado ou fora de casa:** a rodada falha e o GitHub manda e-mail. O aviso no grupo não sai, porque sem o tablet o workflow fica sem internet.
 
 ## Rodar de hora em hora no PC (cron)
+
+> Alternativa ao GitHub Actions. Não use os dois ao mesmo tempo: cada um guarda o próprio `dados/imoveis.json` e os anúncios chegariam repetidos.
 
 ```bash
 crontab -e
