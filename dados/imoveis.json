@@ -29,21 +29,21 @@
   "vivareal"
  ],
  "dia": {
-  "data": "2026-11-25",
-  "rodadas": 2,
-  "primeira": "16:53",
+  "data": "2026-11-26",
+  "rodadas": 1,
+  "primeira": "15:58",
   "novos": 0,
   "sites": {
    "olx": {
-    "ok": 2,
+    "ok": 1,
     "falhas": 0
    },
    "vivareal": {
-    "ok": 2,
+    "ok": 1,
     "falhas": 0
    }
   },
   "resumo_enviado": false,
-  "ultima": "23:47"
+  "ultima": "15:58"
  }
 }
