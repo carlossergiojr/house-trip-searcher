@@ -34,20 +34,20 @@
  ],
  "dia": {
   "data": "2026-11-27",
-  "rodadas": 1,
+  "rodadas": 2,
   "primeira": "13:58",
   "novos": 1,
   "sites": {
    "olx": {
-    "ok": 1,
+    "ok": 2,
     "falhas": 0
    },
    "vivareal": {
-    "ok": 1,
+    "ok": 2,
     "falhas": 0
    }
   },
   "resumo_enviado": false,
-  "ultima": "13:58"
+  "ultima": "15:55"
  }
 }
