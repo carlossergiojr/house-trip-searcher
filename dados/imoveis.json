@@ -2,6 +2,7 @@
  "vistos": [
   "olx:1184207236",
   "olx:1516628980",
+  "olx:1538608728",
   "olx:1555328322",
   "olx:1555368410",
   "olx:1555617376",
@@ -32,21 +33,21 @@
   "vivareal"
  ],
  "dia": {
-  "data": "2026-11-26",
-  "rodadas": 4,
-  "primeira": "15:58",
-  "novos": 3,
+  "data": "2026-11-27",
+  "rodadas": 1,
+  "primeira": "13:58",
+  "novos": 1,
   "sites": {
    "olx": {
-    "ok": 4,
+    "ok": 1,
     "falhas": 0
    },
    "vivareal": {
-    "ok": 4,
+    "ok": 1,
     "falhas": 0
    }
   },
-  "resumo_enviado": true,
-  "ultima": "23:09"
+  "resumo_enviado": false,
+  "ultima": "13:58"
  }
 }
