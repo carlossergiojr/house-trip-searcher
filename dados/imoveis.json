@@ -5,6 +5,7 @@
   "olx:1555368410",
   "olx:1555617376",
   "vivareal:2876544390",
+  "vivareal:2893481943",
   "vivareal:2899130712",
   "vivareal:2902852396",
   "vivareal:2906215813",
@@ -30,20 +31,20 @@
  ],
  "dia": {
   "data": "2026-11-26",
-  "rodadas": 2,
+  "rodadas": 3,
   "primeira": "15:58",
-  "novos": 0,
+  "novos": 1,
   "sites": {
    "olx": {
-    "ok": 2,
+    "ok": 3,
     "falhas": 0
    },
    "vivareal": {
-    "ok": 2,
+    "ok": 3,
     "falhas": 0
    }
   },
   "resumo_enviado": false,
-  "ultima": "21:04"
+  "ultima": "21:10"
  }
 }
